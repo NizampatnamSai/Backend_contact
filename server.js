@@ -9,6 +9,7 @@ connectDb();
 app.use(express.json());
 
 app.use("/api/contacts", require("./Routes/ContanctRoute"));
+app.use("/api/users", require("./Routes/UserRoute"));
 app.use(errorHanlder);
 
 // app.post("/api/contacts", (req, res) => {

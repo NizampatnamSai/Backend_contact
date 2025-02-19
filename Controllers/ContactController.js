@@ -1,4 +1,3 @@
-let Emptyobject = {};
 const asyncHandler = require("express-async-handler");
 const Contact = require("../Modal/contactModal");
 const getContact = async (req, res) => {
