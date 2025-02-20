@@ -7,7 +7,7 @@ const getCurrentUser = async (req, res) => {
   res.json({
     status: true,
     message: "current user info the user",
-    data: [],
+    data: req?.user,
   });
 };
 
