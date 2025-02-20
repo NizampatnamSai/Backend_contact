@@ -1,7 +1,7 @@
 const asyncHandler = require("express-async-handler");
 const Contact = require("../Modal/contactModal");
 const getContact = async (req, res) => {
-  const contacts = await Contact.find();
+  const contacts = await Contact.find({ user_id: req.user.id });
   res
     .status(200)
     // .json({ massage: "Get all the contacts", status: true, data: [] });
@@ -15,6 +15,12 @@ const getContactById = asyncHandler(async (req, res) => {
 
     throw new Error("Contact not found");
   }
+  if (contact?.user_id?.toString() !== req?.user?.id) {
+    return res.status(403).json({
+      message: "You don't have the permission to update it",
+      status: false,
+    });
+  }
   res.status(200).json({
     massage: `Contact received `,
     status: true,
@@ -26,20 +32,7 @@ const createContact = asyncHandler(async (req, res) => {
   console.log(req?.body, "reqreq");
   //   Emptyobject = req?.body;
   let { name, email, phone } = req?.body;
-  //   if (!name || !age) {
-  //     // return res
-  //     //   .status(400)
-  //     //   .json({ massage: "Please fill all the fields", status: false, data: [] });
-  //     res.status(400);
-  //     throw new Error("Please fill all the fields");
-  //   }
-  // if (!name || !age || !phone) {
-  //   return res.status(400).json({
-  //     message: "Please fill all the fieldsss",
-  //     status: false,
-  //     data: [],
-  //   });
-  // }
+
   if (!name) {
     return res.status(400).json({
       message: "Name is mandetory",
@@ -65,6 +58,7 @@ const createContact = asyncHandler(async (req, res) => {
     name,
     email,
     phone,
+    user_id: req?.user?.id,
   });
   res
     .status(201)
@@ -78,6 +72,12 @@ const updateContact = asyncHandler(async (req, res) => {
     res.status(404).json({ massage: "Contact not found", status: false });
 
     throw new Error("Contact not found");
+  }
+  if (contact?.user_id?.toString() !== req?.user?.id) {
+    return res.status(403).json({
+      message: "You don't have the permission to update it",
+      status: false,
+    });
   }
   const updatedContact = await Contact.findByIdAndUpdate(
     req.params.id,
@@ -98,7 +98,15 @@ const deleteContact = asyncHandler(async (req, res) => {
 
     throw new Error("Contact not found");
   }
+  if (contact?.user_id?.toString() !== req?.user?.id) {
+    return res.status(403).json({
+      message: "You don't have the permission to update it",
+      status: false,
+    });
+  }
   await Contact.findByIdAndDelete(req.params.id);
+  // or
+  // await Contact.deleteOne({ _id: req.params.id });
 
   res.status(200).json({
     massage: `deleted the contacts ${req?.params?.id}`,
