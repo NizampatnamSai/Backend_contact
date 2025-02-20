@@ -1,7 +1,7 @@
 const asyncHandler = require("express-async-handler");
 const bcrypt = require("bcrypt");
 const User = require("../Modal/userModal");
-
+const jwt = require("jsonwebtoken");
 //private
 const getCurrentUser = async (req, res) => {
   res.json({
@@ -75,15 +75,15 @@ const registerUser = asyncHandler(async (req, res) => {
 });
 
 const loginUser = asyncHandler(async (req, res) => {
-  let { username, email, password } = req?.body;
+  let { email, password } = req?.body;
 
-  if (!username) {
-    return res.status(400).json({
-      message: "User Name is mandatory",
-      status: false,
-      data: [],
-    });
-  }
+  // if (!username) {
+  //   return res.status(400).json({
+  //     message: "User Name is mandatory",
+  //     status: false,
+  //     data: [],
+  //   });
+  // }
   if (!email) {
     return res.status(400).json({
       message: "Email is mandatory",
@@ -98,15 +98,49 @@ const loginUser = asyncHandler(async (req, res) => {
       data: [],
     });
   }
-  const constact = await User.create({
-    username,
-    email,
-    password,
-  });
-  res
-    .status(201)
-    // .json({ massage: "Added the contact", status: true, data: [] });
-    .json(constact);
+
+  const user = await User.findOne({ email });
+  if (!user) {
+    return res.status(400).json({
+      message: "Email not exist!",
+      status: false,
+      data: [],
+    });
+  }
+  if (user && (await bcrypt.compare(password, user.password))) {
+    const accessToken = jwt.sign(
+      {
+        user: {
+          username: user.username,
+          email: user.email,
+          id: user.id,
+        },
+      },
+      process.env.ACCESS_TOKEN_SECRET,
+      {
+        expiresIn: "1m",
+      }
+    );
+    return res.status(200).json({
+      status: true,
+      accessToken,
+    });
+  } else {
+    return res.status(400).json({
+      message: "Password not matched!",
+      status: false,
+      data: [],
+    });
+  }
+  // const constact = await User.create({
+  //   username,
+  //   email,
+  //   password,
+  // });
+  // res
+  //   .status(201)
+  //   // .json({ massage: "Added the contact", status: true, data: [] });
+  //   .json(constact);
 });
 
 const updateContact = asyncHandler(async (req, res) => {
