@@ -7,6 +7,7 @@ const {
   updateContact,
   deleteContact,
 } = require("../Controllers/ContactController");
+const validateToken = require("../MiddleWare/validateTokenHandler");
 
 //normal get method
 // router.route("/").get(getContact);
@@ -55,6 +56,7 @@ const {
 
 // router.route("/:id").put(updateContact);
 
+router.use(validateToken);
 router.route("/").get(getContact).post(createContact);
 router
   .route("/:id")
