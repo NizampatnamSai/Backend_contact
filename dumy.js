@@ -1,14 +1,5 @@
 const forge = require("node-forge");
 
-const publicKeyPem = `-----BEGIN RSA PUBLIC KEY-----
-MIIBCgKCAQEAsBt3SWUS6gfh6/GAjC1h58ICbI2ZJDNsrpEGI3omQ2tijc3EwIw4
-rPdBkglxL9fH/uPpCeu+Q2cOBX0ARTetwqHp9ka70/wbAMSKo1rGwrAa1U51Dbu5
-Vtm9C4DFVtBoocWULcdoCIrWYcm5UHJ1zsMK4yDLwwYQDd+MKJEjxANGdZiKgF2a
-JVtOLuh+z9Qbna7qVUZqexKuSCcXqJJgzGTkNBuuYgaZaOQnWkGNhGoU6NtiGtdb
-iMeiAh1ddSfQkQUye9lDywC4xHsiweWqV8/DbqQE9zlZVXg/nJIcJ2/xTcM6txG4
-KFQQX54d5B5AGDGaAkMZMtfY1+zCXhRD7wIDAQAB
------END RSA PUBLIC KEY-----`;
-
 const privateKeyPem = `-----BEGIN RSA PRIVATE KEY-----
 MIIEowIBAAKCAQEAsBt3SWUS6gfh6/GAjC1h58ICbI2ZJDNsrpEGI3omQ2tijc3E
 wIw4rPdBkglxL9fH/uPpCeu+Q2cOBX0ARTetwqHp9ka70/wbAMSKo1rGwrAa1U51
@@ -37,24 +28,39 @@ Nx9VCQKBgDW5pZ7j4TevftxAma6cjO2JQ0Qb/rF7TzMRxC9dB+DNAQJmYpApfIJO
 QAOwBUeaygo0xoAeAU0Y+22JjHlZ4mp2Fod3zm7SagPOTwzSJnFz
 -----END RSA PRIVATE KEY-----`;
 
-const testMessage = "TESTING_KEY_MATCH";
+/**
+ * Decrypts an encrypted message using the RSA private key.
+ * @param {string} encryptedMessage - Base64 encoded encrypted message.
+ * @returns {string|null} - Decrypted message or null if decryption fails.
+ */
+function decryptMessage(encryptedMessage) {
+  try {
+    if (!encryptedMessage) {
+      throw new Error("No encrypted message provided.");
+    }
 
-// Encrypt using Public Key
-const publicKey = forge.pki.publicKeyFromPem(publicKeyPem);
-const encrypted = publicKey.encrypt(
-  forge.util.encodeUtf8(testMessage),
-  "RSAES-PKCS1-V1_5"
-);
-const encryptedBase64 = forge.util.encode64(encrypted);
+    console.log("📩 Received Encrypted Message:", encryptedMessage);
 
-// Decrypt using Private Key
-const privateKey = forge.pki.privateKeyFromPem(privateKeyPem);
-try {
-  const decrypted = privateKey.decrypt(
-    forge.util.decode64(encryptedBase64),
-    "RSAES-PKCS1-V1_5"
-  );
-  console.log("✅ Keys Match! Decrypted Message:", decrypted);
-} catch (error) {
-  console.error("❌ Keys Do Not Match! Error:", error.message);
+    // Load the private key
+    const privateKey = forge.pki.privateKeyFromPem(privateKeyPem);
+
+    // Decode Base64 & decrypt
+    const decryptedBytes = privateKey.decrypt(
+      forge.util.decode64(encryptedMessage),
+      "RSAES-PKCS1-V1_5"
+    );
+    const decryptedMessage = forge.util.decodeUtf8(decryptedBytes);
+
+    console.log("✅ Decrypted Message:", decryptedMessage);
+    return decryptedMessage;
+  } catch (error) {
+    console.error("❌ Decryption Failed:", error.message);
+    return null;
+  }
 }
+
+// Example Usage
+const testEncryptedMessage =
+  "diJoHUGoQaRhuXJWCVR8bhfKCxzg9Yzm+VSG8vugXzBSY0cSotWimWtHswkmbVljbUnGecF23MW1SGlylo1Voqf9YegJM+Q2TseozEh5lJgOQyJ3KY/tZwG6j60o+YNLFPocQz/ie5EwPnU+0PCS/sbOVxY+Zqs6uKJbp/MFjcKTIs7QJrph3iWuhZnRCidPgo1MIeEuKQ97aKBr8bipqaWqtV55mq6XzRDZpBEXLdR8IAxiWOIBc8QwnZ40jK8vyGq8AyHSvL6f4IfvyGFeCAPqayZzhAXUInH/R1Pj68Mq9Ijunh+MrFYq3WiBDflxZb9LmiS6Gnz7hl3zmNiHBQ=="; // Replace with actual encrypted message
+const result = decryptMessage(testEncryptedMessage);
+console.log("🔓 Final Output:", result);
